@@ -1,6 +1,10 @@
 class LocalStorageMock {
   constructor() {
     this.store = {};
+
+    var oldObjKeys = Object.keys;
+    Object.keys = arg =>
+      oldObjKeys(arg instanceof LocalStorageMock ? arg.store : arg);
   }
 
   clear() {

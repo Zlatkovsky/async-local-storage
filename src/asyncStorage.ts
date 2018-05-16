@@ -28,7 +28,15 @@ export function multiSet(
   keyValuePairs: string[][],
   callback?: (errors?: Error[]) => void,
 ) {
-  throw new Error('Not implemented');
+  const promises = keyValuePairs
+    .map(pair => setItem(pair[0], pair[1]))
+    .map(promise => promise.catch(e => e));
+  return Promise.all(promises).then(voidsOrErrors => {
+    callback(voidsOrErrors);
+    // Note: don't inline the above to be "voidsOrErrors => callback(voidsOrErrors)"
+    // or even ".then(callback)" because callback could have been returning something,
+    // whereas we want to return an actual empty promise.
+  });
 }
 
 export function multiGet(
