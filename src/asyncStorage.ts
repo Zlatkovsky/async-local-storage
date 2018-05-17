@@ -39,29 +39,6 @@ export function multiSet(
     ([key, value]) => window.localStorage.setItem(key, value),
     callback,
   );
-  // return new Promise((resolve, reject) => {
-  //   if (!callback) {
-  //     callback = (errors?: Error[]) => {};
-  //   }
-
-  //   let errors: Error[];
-
-  //   keyValuePairs.forEach(([key, value]) => {
-  //     try {
-  //       window.localStorage.setItem(key, value);
-  //     } catch (e) {
-  //       errors.push(e);
-  //     }
-  //   });
-
-  //   callback(errors);
-
-  //   if (errors) {
-  //     reject(errors);
-  //   } else {
-  //     resolve();
-  //   }
-  // });
 }
 
 export function multiRemove(
