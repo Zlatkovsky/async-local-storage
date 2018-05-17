@@ -28,15 +28,28 @@ export function multiSet(
   keyValuePairs: string[][],
   callback?: (errors?: Error[]) => void,
 ) {
-  const promises = keyValuePairs
-    .map(pair => setItem(pair[0], pair[1]))
-    .map(promise => promise.catch(e => e));
+  return new Promise((resolve, reject) => {
+    if (!callback) {
+      callback = (errors?: Error[]) => {};
+    }
 
-  return Promise.all(promises).then(voidsOrErrors => {
-    callback(voidsOrErrors);
-    // Note: don't inline the above to be "voidsOrErrors => callback(voidsOrErrors)"
-    // or even ".then(callback)" because callback could have been returning something,
-    // whereas we want to return an actual empty promise.
+    let errors: Error[];
+
+    keyValuePairs.forEach(([key, value]) => {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (e) {
+        errors.push(e);
+      }
+    });
+
+    callback(errors);
+
+    if (errors) {
+      reject(errors);
+    } else {
+      resolve();
+    }
   });
 }
 
@@ -44,12 +57,30 @@ export function multiGet(
   keys: string[],
   callback?: (errors?: Error[], result?: string[][]) => void,
 ) {
-  const promises = keys
-    .map(key => getItem(key))
-    .map(promise => promise.catch(e => e));
+  return new Promise((resolve, reject) => {
+    if (!callback) {
+      callback = (errors?: Error[], result?: string[][]) => {};
+    }
 
-  return Promise.all(promises).then(voidsOrErrors => {
-    callback(voidsOrErrors);
+    let errors: Error[];
+
+    const results = keys
+      .map(key => {
+        try {
+          return [key, window.localStorage.getItem(key)];
+        } catch (e) {
+          errors.push(e);
+        }
+      })
+      .filter(pair => pair);
+
+    if (errors) {
+      callback(errors, results);
+      reject(errors);
+    } else {
+      callback(null, results);
+      resolve(results);
+    }
   });
 }
 

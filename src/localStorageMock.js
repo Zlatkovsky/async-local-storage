@@ -12,6 +12,9 @@ class LocalStorageMock {
   }
 
   getItem(key) {
+    if (key === 'ERROR_KEY') {
+      throw new Error('TEST ERROR');
+    }
     return this.store[key] || null;
   }
 
