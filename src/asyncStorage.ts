@@ -31,6 +31,7 @@ export function multiSet(
   const promises = keyValuePairs
     .map(pair => setItem(pair[0], pair[1]))
     .map(promise => promise.catch(e => e));
+
   return Promise.all(promises).then(voidsOrErrors => {
     callback(voidsOrErrors);
     // Note: don't inline the above to be "voidsOrErrors => callback(voidsOrErrors)"
@@ -43,7 +44,13 @@ export function multiGet(
   keys: string[],
   callback?: (errors?: Error[], result?: string[][]) => void,
 ) {
-  throw new Error('Not implemented');
+  const promises = keys
+    .map(key => getItem(key))
+    .map(promise => promise.catch(e => e));
+
+  return Promise.all(promises).then(voidsOrErrors => {
+    callback(voidsOrErrors);
+  });
 }
 
 // helpers
