@@ -1,23 +1,29 @@
 export function getItem(key: string, callback?: ICallbackWithResult) {
-  return helperWithResult(() => window.localStorage.getItem(key), callback);
+  return performActionAndReturnResult(
+    () => window.localStorage.getItem(key),
+    callback,
+  );
 }
 
 export function setItem(key: string, value: string, callback?: ICallback) {
-  return helper(() => window.localStorage.setItem(key, value), callback);
+  return performAction(() => window.localStorage.setItem(key, value), callback);
 }
 
 export function removeItem(key: string, callback?: ICallback) {
-  return helper(() => window.localStorage.removeItem(key), callback);
+  return performAction(() => window.localStorage.removeItem(key), callback);
 }
 
 export function clear(callback?: ICallback) {
-  return helper(() => window.localStorage.clear(), callback);
+  return performAction(() => window.localStorage.clear(), callback);
 }
 
 export function getAllKeys(
   callback?: (error?: Error, keys?: string[]) => void,
 ) {
-  return helperWithResult(() => Object.keys(window.localStorage), callback);
+  return performActionAndReturnResult(
+    () => Object.keys(window.localStorage),
+    callback,
+  );
 }
 
 export function mergeItem(key: string, value: string, callback?: ICallback) {
@@ -28,29 +34,45 @@ export function multiSet(
   keyValuePairs: string[][],
   callback?: (errors?: Error[]) => void,
 ) {
-  return new Promise((resolve, reject) => {
-    if (!callback) {
-      callback = (errors?: Error[]) => {};
-    }
+  return performMultiAction(
+    keyValuePairs,
+    ([key, value]) => window.localStorage.setItem(key, value),
+    callback,
+  );
+  // return new Promise((resolve, reject) => {
+  //   if (!callback) {
+  //     callback = (errors?: Error[]) => {};
+  //   }
 
-    let errors: Error[];
+  //   let errors: Error[];
 
-    keyValuePairs.forEach(([key, value]) => {
-      try {
-        window.localStorage.setItem(key, value);
-      } catch (e) {
-        errors.push(e);
-      }
-    });
+  //   keyValuePairs.forEach(([key, value]) => {
+  //     try {
+  //       window.localStorage.setItem(key, value);
+  //     } catch (e) {
+  //       errors.push(e);
+  //     }
+  //   });
 
-    callback(errors);
+  //   callback(errors);
 
-    if (errors) {
-      reject(errors);
-    } else {
-      resolve();
-    }
-  });
+  //   if (errors) {
+  //     reject(errors);
+  //   } else {
+  //     resolve();
+  //   }
+  // });
+}
+
+export function multiRemove(
+  keys: string[],
+  callback?: (errors?: Error[]) => void,
+) {
+  return performMultiAction(
+    keys,
+    key => window.localStorage.removeItem(key),
+    callback,
+  );
 }
 
 export function multiGet(
@@ -62,7 +84,7 @@ export function multiGet(
       callback = (errors?: Error[], result?: string[][]) => {};
     }
 
-    let errors: Error[];
+    let errors: Error[] = [];
 
     const results = keys
       .map(key => {
@@ -74,7 +96,7 @@ export function multiGet(
       })
       .filter(pair => pair);
 
-    if (errors) {
+    if (errors.length > 0) {
       callback(errors, results);
       reject(errors);
     } else {
@@ -95,7 +117,7 @@ const defaultCallbackWithResult: ICallbackWithResult = (
   result?: string,
 ) => {};
 
-function helper(
+function performAction(
   action: () => void,
   callback: ICallback = defaultCallback,
 ): Promise<void> {
@@ -111,7 +133,7 @@ function helper(
   });
 }
 
-function helperWithResult(
+function performActionAndReturnResult(
   action: () => any,
   callback: any = defaultCallbackWithResult,
 ) {
@@ -123,6 +145,32 @@ function helperWithResult(
     } catch (e) {
       callback(e, null);
       reject(e);
+    }
+  });
+}
+
+function performMultiAction(
+  collection: any[],
+  action: Function,
+  callback: any = defaultCallback,
+) {
+  return new Promise((resolve, reject) => {
+    let errors: Error[] = [];
+
+    collection.forEach(item => {
+      try {
+        action(item);
+      } catch (e) {
+        errors.push(e);
+      }
+    });
+
+    callback(errors);
+
+    if (errors.length > 0) {
+      reject(errors);
+    } else {
+      resolve();
     }
   });
 }

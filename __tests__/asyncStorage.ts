@@ -6,6 +6,9 @@ const VALUE_1 = 'value1';
 const KEY_2 = 'key2';
 const VALUE_2 = 'value2';
 
+const KEY_3 = 'key3';
+const VALUE_3 = 'value3';
+
 const ERROR_KEY = 'ERROR_KEY';
 const ERROR_VALUE = '!@#$!*!*@()#';
 
@@ -53,5 +56,15 @@ describe('AsyncStorage', () => {
     const testError = new Error('TEST ERROR');
     expect(AsyncStorage.getItem(ERROR_KEY)).rejects.toEqual(testError);
     AsyncStorage.getItem(ERROR_KEY, error => expect(error).toEqual(testError));
+  });
+
+  it('should be able to multiRemove', async () => {
+    const combo = [[KEY_1, VALUE_1], [KEY_2, VALUE_2], [KEY_3, VALUE_3]];
+    await AsyncStorage.clear();
+    await AsyncStorage.multiSet(combo);
+    expect(AsyncStorage.multiRemove([KEY_1, KEY_3])).resolves.toEqual(
+      undefined,
+    );
+    expect(AsyncStorage.getAllKeys()).resolves.toEqual([KEY_2]);
   });
 });
