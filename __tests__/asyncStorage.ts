@@ -55,7 +55,14 @@ describe('AsyncStorage', () => {
   it('should handle errors properly', () => {
     const testError = new Error('TEST ERROR');
     expect(AsyncStorage.getItem(ERROR_KEY)).rejects.toEqual(testError);
-    AsyncStorage.getItem(ERROR_KEY, error => expect(error).toEqual(testError));
+    expect(
+      AsyncStorage.getItem(ERROR_KEY, error =>
+        expect(error).toEqual(testError),
+      ),
+    ).rejects.toEqual(testError);
+    // to avoid unhandled unhandled promise rejection error, double wrapping,
+    // and although it seems strange, doing this to stay true to the implementation here:
+    // https://github.com/facebook/react-native/blob/d01ab66b47a173a62eef6261e2415f0619fefcbb/Libraries/Storage/AsyncStorage.js#L51
   });
 
   it('should be able to multiRemove', async () => {
